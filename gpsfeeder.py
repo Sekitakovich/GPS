@@ -10,7 +10,9 @@ from dataclasses import dataclass, asdict
 import requests
 from datetime import datetime as dt
 from datetime import timedelta
-from logging import config, getLogger
+from logging import getLogger
+
+from log import LogConfigure
 
 
 @dataclass()
@@ -256,6 +258,9 @@ class Main(object):
     def __init__(self, *, port: str, baudrate: int, account: str, url: str):
 
         self.logger = getLogger('Log')
+
+        self.logger.info(msg='Start')
+
         self.account = account
         self.runnninng: bool = True
         self.loopCounter: int = 0
@@ -349,49 +354,6 @@ class Main(object):
 
             time.sleep(self.intervalSecs)
             self.loopCounter += 1
-
-
-class LogConfigure(object):
-
-    def __init__(self, *, file: str = '', encoding: str = 'utf-8'):
-        self._config = {
-            'version': 1,
-            'disable_existing_loggers': False,
-            'formatters': {
-                'simpleFormatter': {
-                    'format': '[%(levelname)s] %(asctime)s %(module)s:%(lineno)s %(funcName)s : %(message)s',
-                    'datefmt': '%H:%M:%S'
-                },
-                'plusFormatter': {
-                    'format': '[%(levelname)s] %(asctime)s %(module)s:%(lineno)s %(funcName)s : %(message)s',
-                    'datefmt': '%Y-%m-%d %H:%M:%S'
-                }
-            },
-            'handlers': {
-                'consoleHandler': {
-                    'level': 'DEBUG',
-                    'formatter': 'simpleFormatter',
-                    'class': 'logging.StreamHandler',
-                },
-                'fileHandler': {
-                    'level': 'INFO',
-                    'formatter': 'plusFormatter',
-                    'class': 'logging.handlers.RotatingFileHandler',
-                    'filename': file,
-                    'maxBytes': 1000000,
-                    'backupCount': 7,
-                    'encoding': encoding,
-                }
-            },
-            'loggers': {
-                'Log': {
-                    'handlers': ['consoleHandler', 'fileHandler'],
-                    'level': "DEBUG",
-                }
-            }
-        }
-
-        config.dictConfig(self._config)
 
 
 if __name__ == '__main__':
