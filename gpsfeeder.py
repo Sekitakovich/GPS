@@ -211,7 +211,7 @@ class Sender(Thread):
         else:
             self.online = True
             if response.status_code == 200:
-                self.logger.debug(msg='send success')
+                # self.logger.debug(msg='send success')
                 pass
             else:
                 self.logger.error(msg=response.status_code)
@@ -271,11 +271,11 @@ class Main(object):
         self.sq = Queue()
 
         self.sleepTable: List[dict] = [
-            {'max': 5, 'val': 30},
-            {'max': 10, 'val': 15},
-            {'max': 25, 'val': 4},
-            {'max': 50, 'val': 3},
-            {'max': 75, 'val': 2},
+            {'max': 5, 'val': 60 * 1},
+            {'max': 10, 'val': 30 * 1},
+            {'max': 20, 'val': 4},
+            {'max': 40, 'val': 3},
+            {'max': 80, 'val': 2},
         ]
 
         try:
@@ -354,7 +354,6 @@ class Main(object):
 class LogConfigure(object):
 
     def __init__(self, *, file: str = '', encoding: str = 'utf-8'):
-
         self._config = {
             'version': 1,
             'disable_existing_loggers': False,
