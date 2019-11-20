@@ -11,19 +11,13 @@ import requests
 from datetime import datetime as dt
 from datetime import timedelta
 from logging import getLogger
+import argparse
 
 from log import LogConfigure
 
 
 @dataclass()
-class Plus(object):
-    alt: float = 0.0
-    sats: int = 0
-    kmh: float = 0.0
-
-
-@dataclass()
-class Basic(object):
+class Must(object):
     lat: float = 0.0
     lng: float = 0.0
     sog: float = 0.0
@@ -42,10 +36,17 @@ class DOP(object):
 
 
 @dataclass()
-class Location(object):
-    base: Basic = Basic()
-    plus: Plus = Plus()
+class Plus(object):
+    alt: float = 0.0
+    sats: int = 0
+    kmh: float = 0.0
     dop: DOP = DOP()
+
+
+@dataclass()
+class Location(object):
+    must: Must = Must()
+    plus: Plus = Plus()
 
 
 class Driver(Thread):
@@ -88,15 +89,15 @@ class Driver(Thread):
                 )
                 jst = (dt.strptime(utcSring, self.SYSdatetimeformat) + timedelta(hours=9)).strftime(
                     self.SYSdatetimeformat)
-                self.location.base.utc = utcSring
+                self.location.must.utc = utcSring
 
-                self.location.base.lat = float(item[3]) if item[3] else 0.0
-                self.location.base.ns = item[4]
-                self.location.base.lng = float(item[5]) if item[5] else 0.0
-                self.location.base.ew = item[6]
-                self.location.base.sog = float(item[7]) if item[7] else 0.0
-                self.location.base.cog = float(item[8]) if item[8] else 0.0
-                self.location.base.mode = item[12]
+                self.location.must.lat = float(item[3]) if item[3] else 0.0
+                self.location.must.ns = item[4]
+                self.location.must.lng = float(item[5]) if item[5] else 0.0
+                self.location.must.ew = item[6]
+                self.location.must.sog = float(item[7]) if item[7] else 0.0
+                self.location.must.cog = float(item[8]) if item[8] else 0.0
+                self.location.must.mode = item[12]
 
                 self.at = jst
                 self.counter += 1
@@ -115,15 +116,20 @@ class Driver(Thread):
         def atGSA():
 
             if item[2] != '1':
-                self.location.dop.p = float(item[4]) if item[4] else 0.0
-                self.location.dop.h = float(item[5]) if item[5] else 0.0
-                self.location.dop.v = float(item[6]) if item[6] else 0.0
+                self.location.plus.dop.p = float(item[4]) if item[4] else 0.0
+                self.location.plus.dop.h = float(item[5]) if item[5] else 0.0
+                self.location.plus.dop.v = float(item[6]) if item[6] else 0.0
+
+        def atTXT():
+
+            self.logger.debug(msg=item)
 
         window: Dict[str, any] = {
             'RMC': atRMC,
             'GGA': atGGA,
             'VTG': atVTG,
             'GSA': atGSA,
+            'TXT': atTXT,
         }
 
         try:
@@ -199,7 +205,7 @@ class Sender(Thread):
         self.retryThread = Thread(target=self.retryCycle, daemon=True)
         self.retryThread.start()
 
-    def send(self, *, content: str) -> bool:
+    def upload(self, *, content: str) -> bool:
 
         success: bool = True
         try:
@@ -231,7 +237,7 @@ class Sender(Thread):
                         if remain:
                             self.logger.debug('Remain %d' % remain)
                             content = self.stack[0]
-                            if self.send(content=content):
+                            if self.upload(content=content):
                                 del (self.stack[0])
                                 self.logger.debug('send OK')
                             else:
@@ -246,14 +252,14 @@ class Sender(Thread):
             src = self.sq.get()
             content: str = json.dumps(src, indent=2)
 
-            if self.send(content=content):
+            if self.upload(content=content):
                 pass
             else:
                 with self.locker:
                     self.stack.append(content)
 
 
-class Main(object):
+class GPSFeeder(object):
 
     def __init__(self, *, port: str, baudrate: int, account: str, url: str):
 
@@ -262,7 +268,7 @@ class Main(object):
         self.logger.info(msg='Start')
 
         self.account = account
-        self.runnninng: bool = True
+        self.ready: bool = True
         self.loopCounter: int = 0
         self.sends: int = 0
         self.report: Dict[str, any] = {
@@ -286,7 +292,7 @@ class Main(object):
         try:
             sp = Serial(port=port, baudrate=baudrate)
         except (SerialException,) as e:
-            self.runnninng = False
+            self.ready = False
             self.logger.error(msg=e)
         else:
 
@@ -329,6 +335,8 @@ class Main(object):
 
         # time.sleep(self.intervalSecs)
 
+        # self.sendThis()
+
         while True:
 
             measuredCunter = self.driver.counter
@@ -363,6 +371,9 @@ if __name__ == '__main__':
 
     logconfig = LogConfigure(file='logs/client.log', encoding='cp932')
 
-    main = Main(port='com5', baudrate=9600, account=account, url=url)
-    if main.runnninng:
-        main.mainLoop()
+    feeder = GPSFeeder(port='com6', baudrate=9600, account=account, url=url)
+
+    # print(json.dumps(asdict(feeder.driver.location), indent=2))
+
+    if feeder.ready:
+        feeder.mainLoop()

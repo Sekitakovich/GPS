@@ -1,0 +1,7 @@
+['GPTXT', '01', '01', '02', 'u-blox ag - www.u-blox.com']
+['GPTXT', '01', '01', '02', 'HW  UBX-G70xx   00070000 FF7FFFFFo']
+['GPTXT', '01', '01', '02', 'ROM CORE 1.00 (59842) Jun 27 2012 17:43:52']
+['GPTXT', '01', '01', '02', 'PROTVER 14.00']
+['GPTXT', '01', '01', '02', 'ANTSUPERV=AC SD PDoS SR']
+['GPTXT', '01', '01', '02', 'ANTSTATUS=OK']
+['GPTXT', '01', '01', '02', 'LLC FFFFFFFF-FFFFFFFF-FFFFFFFF-FFFFFFFF-FFFFFFFD']
