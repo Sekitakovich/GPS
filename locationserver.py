@@ -38,7 +38,7 @@ class Server(object):
         self.wsmember[key] = ws
 
         clientIP: str = ws.scope.get('client')[0]
-        self.logger.debug(msg='connected from %s' % (clientIP,))
+        # self.logger.debug(msg='connected from %s' % (clientIP,))
 
         while True:
             try:
@@ -47,11 +47,11 @@ class Server(object):
                 self.logger.info(msg=e)
                 break
             else:
-                self.logger.debug(msg='Got message from %s' % (clientIP,))
+                # self.logger.debug(msg='Got message from %s' % (clientIP,))
                 for k, dst in self.wsmember.items():
                     if k != key:  # 自らのそれは送信しない
                         to: str = dst.scope.get('client')[0]
-                        self.logger.debug(msg='Send to %s' % (to,))
+                        # self.logger.debug(msg='Send to %s' % (to,))
                         await dst.send_text(msg)
 
         await ws.close()
