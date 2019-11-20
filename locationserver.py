@@ -5,6 +5,7 @@ from typing import Dict
 from logging import getLogger
 from datetime import datetime as dt
 from dataclasses import dataclass
+import websocket
 
 from log import LogConfigure
 
@@ -25,12 +26,13 @@ class Server(object):
         self.api = responder.API(debug=True)
         self.wsmember: Dict[str, WebSocket] = {}
 
-        self.api.add_route('/post', self.append)
+        self.api.add_route('/post', self.insert)
         self.api.add_route('/ws', self.websocketServer, websocket=True)
 
         self.api.run(port=80, address='0.0.0.0')
 
     async def websocketServer(self, ws: WebSocket):
+
         await ws.accept()
         key: str = ws.headers.get('sec-websocket-key')
         self.wsmember[key] = ws
@@ -55,10 +57,14 @@ class Server(object):
         await ws.close()
         del self.wsmember[key]
 
-    async def append(self, message: responder.Request, reply: responder.Response):
-        postBody = await message.media()
-        reply.content = b'OK'
-        pprint(postBody)
+    async def insert(self, message: responder.Request, reply: responder.Response):
+        try:  # これ通用してない
+            postBody = await message.media()
+        except (TypeError,) as e:
+            self.logger.error(msg=e)
+        else:
+            reply.content = b'OK'
+            pprint(postBody)
 
 
 if __name__ == '__main__':
