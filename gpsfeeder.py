@@ -203,7 +203,7 @@ class Sender(Thread):
 
         success: bool = True
         try:
-            response = requests.post(self.url, content, headers=self.headers, timeout=5.0)
+            response = requests.post(self.url, content, headers=self.headers, timeout=2.5)
         except (
                 requests.exceptions.Timeout, requests.exceptions.ConnectionError,
                 requests.exceptions.HTTPError) as e:
